@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "fastflowcollector",
+  "private_key_id": "a570a2dfbf0fc02693abcd033afba41d962b492c",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCn5r9gml3k8y9o\n+bwZ0uhqS3m1rpVvdWGwbCFdvR92W3sSuveiL4ggUPmcjE/CGPPvjB0J96Ebesk5\nFJAOJauPcPw7j3Ui2d7+Oh2lcLSZCRROaEAjigzTyh1xNnMSlwHxT/1aDwut9PAX\nu0+MTiRf0gyAK3al8hUv9r0xcX/9+v7C0GaMi6j6C1udUCY7bBj5U+t9D4SKAT6J\nYyhNEjYq0MeUT8LdrllVp6wUBYr5+7mmS1v00Bm0PwT/qgC6Y7Dy5lQLE+Ym+Xl3\neu7vIKw31VQc+IO+jVJlRhUmsbtQEp1NQKSznRjUi+4vbWesgXN7KvZ2UbKameom\nAsDhnThdAgMBAAECggEAM8Ta9z9BeildUeHGlLPKA5Q398PXwaEQuOPuOcfpXoYA\nYZsSZYiAUW6GODWvFeq5s/+gqIUYwK9QQfBMJoCI8FZm/zpRZKiGsB5dK7ifhpwd\nDbvpIswa/mZQQ6sFOhMjfzMpq839zOo76SVQ9rLVVlIelppQIASPcdWDKi6Tx0xP\nRd8df3/Ac1deQKsK55im+RnMCpOarsHZDz3hmmZs4AgfGbnJgrijvtyBcb974IMR\ngM9Ouc8r+3zSJXVMZ+wLAP+oK78G8QrsNw0gm17rNd4kNi9tgYqKZmyU+lToowCD\n3czX6K9CLVCwO7gcuomxIi50uMMS5i4XMQxSol1ChQKBgQDjEdmyu0K8H+d28LxZ\nqE4kz1pN7RXiPQsWr7cBo0OpNbDunnS7yzFv5KrLbxjrIF9x0fc9HKy33AA/3CUH\naXmc5MsxECiXZKfQXUDgx3cI42OBzAGgEPa+vhoMbHUNqw8JM+/QZkyKVEDR0pRW\nQwkApysv4hR12/kLJNh+WfbovwKBgQC9SwzhhOAt+A3A0hyKK0Ne040HWv+Vx3m8\nqGQrHoMd27xrpH9aRmPywmHU+RWmpz1de2h8OaBjfvhZMkXls6zc/uHfBOmTcuZG\noKog5gf9CndyDdLtJGI3kDqZJB/700qdVJwZSj8mv5n68x8sAiaF6LfK2IBv8vN0\nbqSbdOnp4wKBgQDIpqVwwvkdtDOdbu2BbLBg5rot0itcWATMb0mQMO1BQSiwM2WD\n7PIqpi4mxm2GmHy+34NShVw6vDWcOLSf8Bx+/85t9JFp9pA0F7OU7a3KNOVhdRya\njWL8+o+aGtz0zwviXfq0dTF9qyX8Q9DAyUvTP+Vx0p2x6EgSCOUmAemlkQKBgB4l\nRp7fr2gCugX8MClc7HS8khgayNtMkjmWQ6WOTWlC5kXqQ5HX5fDyPexR4r3Qongx\nwBkQgFd4EAr8c586NwxW1xfSS3R89ulGivGEUL9enFkglHfJtI6OvJZI54MOSjK2\nF8n7RgVgvB/3+f3jNclbn3GBeyrY8SaYvEQ5oUrrAoGBAJIGWKRzTrSCJKtCURIB\ng1vueuW+OdzztxbWlzPVI/+hzqSD2BxAZr5neMzvsCqr8GSJnmmIkKfoDN3Vs1cF\njOghAUXGHFcI/Qiiid3jccVk/6C/oe7nrJn7bjZxwtDZq1ob3HSHeo2miXb8neWY\n9Ls9wzlK9+RDFk42koZph2Ep\n-----END PRIVATE KEY-----\n",
+  "client_email": "fastflow-service@fastflowcollector.iam.gserviceaccount.com",
+  "client_id": "109183244678586676097",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/fastflow-service%40fastflowcollector.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
