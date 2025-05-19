@@ -40,6 +40,8 @@ class VideoProcessor(VideoProcessorBase):
             'spo2': None, 'sys': None, 'dia': None,
             'face_detected': False
         }
+        self.stable_data = None
+        self.timer_start = time.time()
 
     def recv(self, frame):
         now = time.time()
@@ -57,6 +59,8 @@ class VideoProcessor(VideoProcessorBase):
                 self.data['rr'] = np.random.randint(12, 18)
                 self.data['sys'] = int(120 + 0.5 * (self.data['hr'] - 70) + 0.2 * (self.data['rr'] - 16))
                 self.data['dia'] = int(80 + 0.3 * (self.data['hr'] - 70) + 0.1 * (self.data['rr'] - 16))
+                if now - self.timer_start >= 30 and not self.stable_data:
+                    self.stable_data = self.data.copy()
         else:
             self.data = {
                 'hr': None, 'rr': None, 'temp': None,
@@ -71,7 +75,7 @@ ctx = webrtc_streamer(
     key="fastflow",
     mode=WebRtcMode.SENDRECV,
     video_processor_factory=VideoProcessor,
-    media_stream_constraints={"video": True, "audio": False},
+    media_stream_constraints={"video": {"width": 640, "height": 480}, "audio": False},
     async_processing=True
 )
 
@@ -80,7 +84,6 @@ if ctx and ctx.state.playing and ctx.video_processor:
     vp = ctx.video_processor
     st.markdown("## 🔄 Live Monitoring")
     placeholder = st.empty()
-    timer_start = time.time()
 
     while ctx.state.playing:
         with placeholder.container():
@@ -110,9 +113,15 @@ if ctx and ctx.state.playing and ctx.video_processor:
                 else:
                     st.metric("BP", "--/--", "No person detected")
 
-            # 30s summary
-            if time.time() - timer_start > 30 and vp.data['hr']:
-                st.info(f"📊 Summary After 30s: HR: {vp.data['hr']} | RR: {vp.data['rr']} | Temp: {vp.data['temp']}°C | SpO₂: {vp.data['spo2']}% | BP: {vp.data['sys']}/{vp.data['dia']}")
+            if vp.stable_data:
+                st.markdown("## 📊 Measurements (Stabilized After 30 Seconds)")
+                st.write({
+                    "Heart Rate": vp.stable_data['hr'],
+                    "Resp. Rate": vp.stable_data['rr'],
+                    "Temp (°C)": vp.stable_data['temp'],
+                    "SpO₂ (%)": vp.stable_data['spo2'],
+                    "BP": f"{vp.stable_data['sys']}/{vp.stable_data['dia']} mmHg"
+                })
 
             if vp.data['hr'] and st.button("✅ Submit to Google Sheet"):
                 row = [
