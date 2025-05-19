@@ -60,16 +60,17 @@ ctx = webrtc_streamer(
 
 if ctx and ctx.video_processor:
     st.subheader("📊 Vital Sign Readings")
-    ...
-else:
-    st.info("📷 Waiting for webcam access... Please allow camera permissions in your browser.")
 
     hr = ctx.video_processor.hr
     rr = ctx.video_processor.rr
-    temp = ctx.video_processor.temp
     spo2 = ctx.video_processor.spo2
-    sys = ctx.video_processor.sys
-    dia = ctx.video_processor.dia
+    temp = ctx.video_processor.temp
+    bp_sys = ctx.video_processor.bp_sys
+    bp_dia = ctx.video_processor.bp_dia
+
+    # Your indicator markdowns go here
+else:
+    st.warning("Waiting for camera to initialize... Please allow access if prompted.")
 
     col1, col2 = st.columns(2)
     with col1:
