@@ -51,11 +51,18 @@ class VideoProcessor(VideoProcessorBase):
         self.dia = int(80 + 0.3 * (self.hr - 70) + 0.1 * (self.rr - 16))
         return frame
 
-ctx = webrtc_streamer(key="fastflow", mode=WebRtcMode.SENDRECV, video_processor_factory=VideoProcessor)
+ctx = webrtc_streamer(
+    key="fastflow",
+    mode=WebRtcMode.SENDRECV,
+    video_processor_factory=VideoProcessor,
+    media_stream_constraints={"video": True, "audio": False}
+)
 
-# ------------------ Display Vitals ------------------
-if ctx.video_processor:
+if ctx and ctx.video_processor:
     st.subheader("📊 Vital Sign Readings")
+    ...
+else:
+    st.info("📷 Waiting for webcam access... Please allow camera permissions in your browser.")
 
     hr = ctx.video_processor.hr
     rr = ctx.video_processor.rr
