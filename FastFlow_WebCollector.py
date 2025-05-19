@@ -2,7 +2,6 @@
 import streamlit as st
 from datetime import datetime
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import tempfile
 import json
 import cv2
@@ -58,19 +57,13 @@ ctx = webrtc_streamer(
     media_stream_constraints={"video": True, "audio": False}
 )
 
-if ctx and ctx.video_processor:
-    st.subheader("📊 Vital Sign Readings")
-
+if ctx and ctx.video_processor and ctx.video_processor.hr:
     hr = ctx.video_processor.hr
     rr = ctx.video_processor.rr
     spo2 = ctx.video_processor.spo2
     temp = ctx.video_processor.temp
-    bp_sys = ctx.video_processor.bp_sys
-    bp_dia = ctx.video_processor.bp_dia
-
-    # Your indicator markdowns go here
-else:
-    st.warning("Waiting for camera to initialize... Please allow access if prompted.")
+    bp_sys = ctx.video_processor.sys
+    bp_dia = ctx.video_processor.dia
 
     col1, col2 = st.columns(2)
     with col1:
@@ -79,13 +72,13 @@ else:
     with col2:
         st.metric("Temperature", f"{temp} °C", f"Estimated – {'Normal' if 36.1 <= temp <= 37.2 else 'Abnormal'}")
         st.metric("SpO₂", f"{spo2} %", f"Estimated – {'Normal' if spo2 >= 95 else 'Abnormal'}")
-        st.metric("BP", f"{sys}/{dia} mmHg", f"Estimated – {'Normal' if (sys < 130 and dia < 85) else 'Abnormal'}")
-
-    st.markdown("")
+        st.metric("BP", f"{bp_sys}/{bp_dia} mmHg", f"Estimated – {'Normal' if (bp_sys < 130 and bp_dia < 85) else 'Abnormal'}")
 
     # ------------------ Submit ------------------
     if st.button("✅ Submit to Google Sheet"):
         now = str(datetime.now())
-        row = [now, hr, rr, temp, spo2, sys, dia]
+        row = [now, hr, rr, temp, spo2, bp_sys, bp_dia]
         sheet.append_row(row)
         st.success("✅ Data submitted successfully!")
+else:
+    st.warning("⏳ Initializing camera... please wait or check permissions.")
