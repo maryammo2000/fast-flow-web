@@ -1,5 +1,6 @@
-streamlit
+streamlit==1.45.1
+streamlit-webrtc==0.45.0
+opencv-python-headless
+numpy
 gspread
 oauth2client
-numpy
-opencv-python-headless
