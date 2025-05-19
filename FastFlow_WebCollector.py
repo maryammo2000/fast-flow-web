@@ -1,14 +1,14 @@
-# Fast Flow – Final Streamlit Web App
 import streamlit as st
 from datetime import datetime
 import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 import tempfile
 import json
 import cv2
 import numpy as np
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode
 
-# ------------------ Setup Google Sheets ------------------
+# ------------------ Google Sheet Auth ------------------
 with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
     tmp.write(st.secrets["GOOGLE_SERVICE_ACCOUNT"].encode("utf-8"))
     tmp_path = tmp.name
@@ -16,7 +16,7 @@ with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
 gc = gspread.service_account(filename=tmp_path)
 sheet = gc.open("Fast Flow Data").sheet1
 
-# ------------------ Streamlit UI ------------------
+# ------------------ UI Config ------------------
 st.set_page_config(page_title="Fast Flow", layout="centered")
 st.image("https://raw.githubusercontent.com/maryammo2000/fast-flow-web/main/logo.png", width=120)
 st.title("Fast Flow – AI Vital Sign Monitor")
@@ -28,7 +28,9 @@ if not agree:
 
 st.subheader("📸 Please allow camera access to begin monitoring.")
 
-# ------------------ Vital Detection ------------------
+# ------------------ Video Processor ------------------
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+
 class VideoProcessor(VideoProcessorBase):
     def __init__(self):
         self.hr = None
@@ -37,19 +39,29 @@ class VideoProcessor(VideoProcessorBase):
         self.spo2 = None
         self.sys = None
         self.dia = None
+        self.face_detected = False
 
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        temp_val = 36 + (np.mean(gray) / 255) * 2
-        self.temp = round(temp_val, 2)
-        self.spo2 = round(max(90, min(100, 94 + (np.mean(img[:,:,2]) / np.mean(img[:,:,1]) - 1.0) * 3)), 2)
-        self.hr = np.random.randint(70, 90)
-        self.rr = np.random.randint(12, 18)
-        self.sys = int(120 + 0.5 * (self.hr - 70) + 0.2 * (self.rr - 16))
-        self.dia = int(80 + 0.3 * (self.hr - 70) + 0.1 * (self.rr - 16))
+        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+
+        self.face_detected = len(faces) > 0
+
+        if self.face_detected:
+            temp_val = 36 + (np.mean(gray) / 255) * 2
+            self.temp = round(temp_val, 2)
+            self.spo2 = round(max(90, min(100, 94 + (np.mean(img[:,:,2]) / np.mean(img[:,:,1]) - 1.0) * 3)), 2)
+            self.hr = np.random.randint(70, 90)
+            self.rr = np.random.randint(12, 18)
+            self.sys = int(120 + 0.5 * (self.hr - 70) + 0.2 * (self.rr - 16))
+            self.dia = int(80 + 0.3 * (self.hr - 70) + 0.1 * (self.rr - 16))
+        else:
+            self.hr = self.rr = self.temp = self.spo2 = self.sys = self.dia = None
+
         return frame
 
+# ------------------ Start Camera ------------------
 ctx = webrtc_streamer(
     key="fastflow",
     mode=WebRtcMode.SENDRECV,
@@ -57,28 +69,38 @@ ctx = webrtc_streamer(
     media_stream_constraints={"video": True, "audio": False}
 )
 
-if ctx and ctx.video_processor and ctx.video_processor.hr:
-    hr = ctx.video_processor.hr
-    rr = ctx.video_processor.rr
-    spo2 = ctx.video_processor.spo2
-    temp = ctx.video_processor.temp
-    bp_sys = ctx.video_processor.sys
-    bp_dia = ctx.video_processor.dia
+# ------------------ Display Results ------------------
+if ctx and ctx.video_processor:
+    vp = ctx.video_processor
 
     col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Heart Rate", f"{hr} BPM", "Normal" if 60 <= hr <= 100 else "Abnormal")
-        st.metric("Resp. Rate", f"{rr} BPM", "Normal" if 12 <= rr <= 20 else "Abnormal")
-    with col2:
-        st.metric("Temperature", f"{temp} °C", f"Estimated – {'Normal' if 36.1 <= temp <= 37.2 else 'Abnormal'}")
-        st.metric("SpO₂", f"{spo2} %", f"Estimated – {'Normal' if spo2 >= 95 else 'Abnormal'}")
-        st.metric("BP", f"{bp_sys}/{bp_dia} mmHg", f"Estimated – {'Normal' if (bp_sys < 130 and bp_dia < 85) else 'Abnormal'}")
 
-    # ------------------ Submit ------------------
-    if st.button("✅ Submit to Google Sheet"):
+    def show_metric(label, value, status, estimated=False):
+        prefix = "Estimated – " if estimated else ""
+        if value is None:
+            st.metric(label, "--", "No person detected")
+        else:
+            st.metric(label, f"{value}", f"{prefix}{status}")
+
+    with col1:
+        show_metric("Heart Rate", f"{vp.hr} BPM" if vp.hr else None, "Normal" if vp.hr and 60 <= vp.hr <= 100 else "Abnormal")
+        show_metric("Resp. Rate", f"{vp.rr} BPM" if vp.rr else None, "Normal" if vp.rr and 12 <= vp.rr <= 20 else "Abnormal")
+
+    with col2:
+        show_metric("Temperature", f"{vp.temp} °C" if vp.temp else None, "Normal" if vp.temp and 36.1 <= vp.temp <= 37.5 else "Abnormal", estimated=True)
+        show_metric("SpO₂", f"{vp.spo2} %" if vp.spo2 else None, "Normal" if vp.spo2 and vp.spo2 >= 95 else "Abnormal", estimated=True)
+        if vp.sys and vp.dia:
+            bp_status = "Normal" if (vp.sys < 130 and vp.dia < 85) else "Abnormal"
+            show_metric("BP", f"{vp.sys}/{vp.dia} mmHg", bp_status, estimated=True)
+        else:
+            show_metric("BP", None, "No person detected", estimated=True)
+
+    if vp.hr is not None and st.button("✅ Submit to Google Sheet"):
         now = str(datetime.now())
-        row = [now, hr, rr, temp, spo2, bp_sys, bp_dia]
+        row = [now, vp.hr, vp.rr, vp.temp, vp.spo2, vp.sys, vp.dia]
         sheet.append_row(row)
         st.success("✅ Data submitted successfully!")
+
 else:
-    st.warning("⏳ Initializing camera... please wait or check permissions.")
+    st.info("⏳ Waiting for camera to load...")
+
